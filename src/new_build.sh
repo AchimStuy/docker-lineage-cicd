@@ -367,15 +367,13 @@ for codename in ${devices//,/ }; do
     # Handle keys
     if [ "$SIGN_BUILDS" = true ]; then
       echo ">> [$(date)] Adding keys path ($KEYS_DIR)"
-      # Soong (Android 9+) complains if the signing keys are outside the build path
-      ln -sf "$KEYS_DIR" user-keys
-      if [ "$android_version_major" -lt "10" ]; then
-        sed -i "1s;^;PRODUCT_DEFAULT_DEV_CERTIFICATE := user-keys/releasekey\nPRODUCT_OTA_PUBLIC_KEYS := user-keys/releasekey\nPRODUCT_EXTRA_RECOVERY_KEYS := user-keys/releasekey\n\n;" "vendor/$vendor/config/common.mk"
-      fi
+      # * copy lineage-priv directory
+      cp -r lineage/scripts/lineage-priv-template/. vendor/lineage-priv/keys
 
-      if [ "$android_version_major" -ge "10" ]; then
-        sed -i "1s;^;PRODUCT_DEFAULT_DEV_CERTIFICATE := user-keys/releasekey\nPRODUCT_OTA_PUBLIC_KEYS := user-keys/releasekey\nPRODUCT_MAINLINE_BLUETOOTH_SEPOLICY_DEV_CERTIFICATES := \$(dir \$(PRODUCT_DEFAULT_DEV_CERTIFICATE))\n\n;" "vendor/$vendor/config/common.mk"
-      fi
+      # * create keys, that don't exist
+      cd vendor/lineage-priv/keys/
+      ./keys.sh
+      cd ../../../
     fi
 
     # Prepare the environment
